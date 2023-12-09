@@ -15,7 +15,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	_ "net/http/pprof"
 	"runtime"
 	"strconv"
 	"strings"
@@ -25,7 +24,6 @@ import (
 var (
 	pcapBufferSize = 0
 	debug          bool
-	prof           bool
 	cpuRate        int
 	name           string
 	els            bool   = false
@@ -68,7 +66,6 @@ type MySQLPacketInfo struct {
 func parseOptions() {
 	flag.IntVar(&pcapBufferSize, "pcapBufferSize", 0, "pcapBufferSize")
 	flag.BoolVar(&debug, "debug", false, "debug")
-	flag.BoolVar(&prof, "prof", false, "prof")
 	flag.StringVar(&pcapFile, "f", "", "pcap file. this option invalid packet capture from devices.")
 	flag.IntVar(&packetCount, "c", -1, "Limit processing packets count (only enable when -debug is also specified)")
 	flag.StringVar(&name, "name", "", "process name which is used as prefix of redis key")
@@ -324,11 +321,6 @@ func main() {
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 1000
 
 	parseOptions()
-	if prof {
-		go func() {
-			log.Println(http.ListenAndServe("localhost:6060", nil))
-		}()
-	}
 	ignoreHosts = strings.Split(ignoreHostStr, ",")
 
 	// redis client
