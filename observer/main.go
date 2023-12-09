@@ -25,8 +25,8 @@ var (
 	cpuRate    int
 	name       string
 	els        bool   = false
-	timelayout string = "2006-01-02 15:04:05.000000"
-	read_only  bool   = true
+	timeLayout string = "2006-01-02 15:04:05.000000"
+	readOnly   bool   = true
 
 	device      string
 	snapshotLen int
@@ -41,14 +41,14 @@ var (
 	rHost     string
 	rPort     int
 	rPassword string
-	pcapfile  string
+	pcapFile  string
 
 	eHost   string
 	ePort   int
 	eUser   string
 	ePasswd string
 
-	rpool   *redis.Pool
+	rPool   *redis.Pool
 	eClient *http.Client
 )
 
@@ -63,7 +63,7 @@ type MySQLPacketInfo struct {
 
 func parseOptions() {
 	flag.BoolVar(&debug, "debug", false, "debug")
-	flag.StringVar(&pcapfile, "f", "", "pcap file. this option invalid packet capture from devices.")
+	flag.StringVar(&pcapFile, "f", "", "pcap file. this option invalid packet capture from devices.")
 	flag.IntVar(&packetCount, "c", -1, "Limit processing packets count (only enable when -debug is also specified)")
 	flag.StringVar(&name, "name", "", "process name which is used as prefix of redis key")
 	flag.IntVar(&cpuRate, "cpu-rate", 2, "This is experimental option, It is NOT recommended to use this! goroutine rate for CPUs, specify the doubled rate which you want to specify")
@@ -151,7 +151,7 @@ func writeQueriesToFile(packet gopacket.Packet, cnt int) {
 			return
 		}
 
-		fmt.Printf("%4d, %26s, %-10s: ", cnt, pInfo.capturedTime.Format(timelayout), pInfo.mysqlPacket[0].GetCommandType())
+		fmt.Printf("%4d, %26s, %-10s: ", cnt, pInfo.capturedTime.Format(timeLayout), pInfo.mysqlPacket[0].GetCommandType())
 		/*
 			j, err := json.Marshal(pInfo.mysqlPacket)
 			if err != nil {
@@ -191,14 +191,14 @@ func sendQuery(packet gopacket.Packet) {
 		if pInfo.mysqlPacket[0].GetCommandType() == mp.COM_QUERY {
 			cmd := pInfo.mysqlPacket[0].(mp.ComQuery)
 			q := makeOneLine(cmd.Query)
-			if read_only && !checkReadQuery(q) {
+			if readOnly && !checkReadQuery(q) {
 				return
 			}
 			val = "Q;" + capturedTime + ";" + q
 		} else if pInfo.mysqlPacket[0].GetCommandType() == mp.COM_STMT_PREPARE {
 			cmd := pInfo.mysqlPacket[0].(mp.ComSTMTPrepare)
 			q := makeOneLine(cmd.Query)
-			if read_only && !checkReadQuery(q) {
+			if readOnly && !checkReadQuery(q) {
 				return
 			}
 			val = "P;" + capturedTime + ";" + q
@@ -218,7 +218,7 @@ func sendQuery(packet gopacket.Packet) {
 		} else {
 			return
 		}
-		c := rpool.Get()
+		c := rPool.Get()
 		_, err = c.Do("RPUSH", key, val)
 
 		if err != nil {
@@ -252,12 +252,12 @@ func sendQueryToElasticsearch(packet gopacket.Packet) {
 		} else {
 			return
 		}
-		if read_only && !checkReadQuery(q) {
+		if readOnly && !checkReadQuery(q) {
 			return
 		}
 
 		jsonString := fmt.Sprintf("{\"captured_time\": \"%s\", \"src_ip\":\"%s\", \"src_port\":\"%d\", \"dst_ip\":\"%s\", \"dst_port\":\"%d\", \"mysql_query\":\"%s\"}",
-			pInfo.capturedTime.Format(timelayout), pInfo.srcIP, pInfo.srcPort, pInfo.dstIP, pInfo.dstPort, q)
+			pInfo.capturedTime.Format(timeLayout), pInfo.srcIP, pInfo.srcPort, pInfo.dstIP, pInfo.dstPort, q)
 		if debug {
 			fmt.Println(jsonString)
 		}
@@ -308,16 +308,16 @@ func main() {
 	var err error
 	if !debug {
 		redisHost := rHost + ":" + strconv.Itoa(rPort)
-		rpool = newPool(redisHost, cpus)
+		rPool = newPool(redisHost, cpus)
 	}
 	if eHost != "" {
 		els = true
 		eClient = &http.Client{}
 	}
 
-	if pcapfile != "" {
+	if pcapFile != "" {
 		// Open from pcap file
-		handle, err = pcap.OpenOffline(pcapfile)
+		handle, err = pcap.OpenOffline(pcapFile)
 	} else {
 		// Open device
 		ihandler, _ := pcap.NewInactiveHandle(device)
