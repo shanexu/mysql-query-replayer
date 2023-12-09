@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -235,6 +236,15 @@ func makeOneLine(q string) string {
 	return q
 }
 
+type Capture struct {
+	Time    time.Time `json:"time"`
+	SrcIP   string    `json:"src_ip"`
+	SrcPort int       `json:"src_port"`
+	DstIP   string    `json:"dst_ip"`
+	DstPort int       `json:"dst_port"`
+	Query   string    `json:"query"`
+}
+
 // to Elasticsearch
 func sendQueryToElasticsearch(packet gopacket.Packet) {
 	applicationLayer := packet.ApplicationLayer()
@@ -248,18 +258,22 @@ func sendQueryToElasticsearch(packet gopacket.Packet) {
 		q := ""
 		if pInfo.mysqlPacket[0].GetCommandType() == mp.COM_QUERY {
 			cmd := pInfo.mysqlPacket[0].(mp.ComQuery)
-			q = makeOneLine(cmd.Query)
+			q = cmd.Query
 		} else {
 			return
 		}
-		if readOnly && !checkReadQuery(q) {
-			return
-		}
 
-		jsonString := fmt.Sprintf("{\"captured_time\": \"%s\", \"src_ip\":\"%s\", \"src_port\":\"%d\", \"dst_ip\":\"%s\", \"dst_port\":\"%d\", \"mysql_query\":\"%s\"}",
-			pInfo.capturedTime.Format(timeLayout), pInfo.srcIP, pInfo.srcPort, pInfo.dstIP, pInfo.dstPort, q)
+		c := Capture{
+			Time:    pInfo.capturedTime,
+			SrcIP:   pInfo.srcIP,
+			SrcPort: pInfo.srcPort,
+			DstIP:   pInfo.dstIP,
+			DstPort: pInfo.dstPort,
+			Query:   q,
+		}
+		jsonString, _ := json.Marshal(c)
 		if debug {
-			fmt.Println(jsonString)
+			fmt.Println(string(jsonString))
 		}
 
 		if eHost == "0.0.0.0" {
