@@ -15,6 +15,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"runtime"
 	"strconv"
 	"strings"
@@ -23,6 +24,7 @@ import (
 
 var (
 	debug      bool
+	prof       bool
 	cpuRate    int
 	name       string
 	els        bool   = false
@@ -64,6 +66,7 @@ type MySQLPacketInfo struct {
 
 func parseOptions() {
 	flag.BoolVar(&debug, "debug", false, "debug")
+	flag.BoolVar(&prof, "prof", false, "prof")
 	flag.StringVar(&pcapFile, "f", "", "pcap file. this option invalid packet capture from devices.")
 	flag.IntVar(&packetCount, "c", -1, "Limit processing packets count (only enable when -debug is also specified)")
 	flag.StringVar(&name, "name", "", "process name which is used as prefix of redis key")
@@ -316,6 +319,11 @@ func sendQueryToElasticsearch(packet gopacket.Packet) {
 }
 
 func main() {
+	if prof {
+		go func() {
+			log.Println(http.ListenAndServe("localhost:6060", nil))
+		}()
+	}
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 1000
 
 	parseOptions()
@@ -352,7 +360,7 @@ func main() {
 	}
 	defer handle.Close()
 
-	var filter string = "tcp and tcp[13] & 8 != 0" // tcp PSH flag is set (more smart filtering needed!)
+	filter := "tcp and tcp[13] & 8 != 0" // tcp PSH flag is set (more smart filtering needed!)
 	if mPort != 0 {
 		filter += " and port " + strconv.Itoa(mPort)
 	}
