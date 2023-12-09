@@ -3,8 +3,8 @@ module github.com/tom--bo/mysql-query-replayer
 go 1.19
 
 require (
-	github.com/garyburd/redigo v1.6.4
 	github.com/go-sql-driver/mysql v1.7.1
+	github.com/gomodule/redigo v1.8.9
 	github.com/google/gopacket v1.1.19
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/tom--bo/mysql-packet-deserializer v0.0.0-20220313094008-b66f1c4334df
