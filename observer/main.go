@@ -335,7 +335,6 @@ func main() {
 	}
 	if err != nil {
 		log.Fatal(err)
-		panic(err)
 	}
 	defer handle.Close()
 
