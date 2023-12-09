@@ -334,7 +334,7 @@ func main() {
 		handle, err = ihandler.Activate()
 	}
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	defer handle.Close()
 
@@ -345,7 +345,7 @@ func main() {
 
 	err = handle.SetBPFFilter(filter)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	// Use the handle as a packet source to process all packets
