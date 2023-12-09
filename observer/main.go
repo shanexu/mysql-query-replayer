@@ -244,6 +244,7 @@ type Capture struct {
 	SrcPort int       `json:"src_port"`
 	DstIP   string    `json:"dst_ip"`
 	DstPort int       `json:"dst_port"`
+	CmdType string    `json:"cmd_type"`
 	Query   string    `json:"query"`
 }
 
@@ -257,10 +258,16 @@ func sendQueryToElasticsearch(packet gopacket.Packet) {
 			return
 		}
 
+		ct := ""
 		q := ""
 		if pInfo.mysqlPacket[0].GetCommandType() == mp.COM_QUERY {
 			cmd := pInfo.mysqlPacket[0].(mp.ComQuery)
 			q = cmd.Query
+			ct = mp.COM_QUERY
+		} else if pInfo.mysqlPacket[0].GetCommandType() == mp.COM_INIT_DB {
+			cmd := pInfo.mysqlPacket[0].(mp.ComInitDb)
+			q = cmd.SchemaName
+			ct = mp.COM_INIT_DB
 		} else {
 			return
 		}
@@ -271,6 +278,7 @@ func sendQueryToElasticsearch(packet gopacket.Packet) {
 			SrcPort: pInfo.srcPort,
 			DstIP:   pInfo.dstIP,
 			DstPort: pInfo.dstPort,
+			CmdType: ct,
 			Query:   q,
 		}
 		jsonString, _ := json.Marshal(c)
