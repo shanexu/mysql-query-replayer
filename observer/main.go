@@ -12,7 +12,6 @@ import (
 	"github.com/google/gopacket/pcap"
 	mp "github.com/tom--bo/mysql-packet-deserializer"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"runtime"
@@ -290,7 +289,7 @@ func sendQueryToElasticsearch(packet gopacket.Packet) {
 		if err != nil {
 			panic(err)
 		}
-		_, err = ioutil.ReadAll(resp.Body)
+		_, err = io.ReadAll(resp.Body)
 		if err != nil {
 			panic(err)
 		}
