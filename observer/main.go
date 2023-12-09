@@ -290,7 +290,7 @@ func sendQueryToElasticsearch(packet gopacket.Packet) {
 			req, err = http.NewRequest(
 				"POST",
 				"https://"+eHost+":"+strconv.Itoa(ePort)+"/mqr/query",
-				bytes.NewBuffer([]byte(jsonString)),
+				bytes.NewBuffer(jsonString),
 			)
 			auth := eUser + ":" + ePasswd
 			req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(auth)))
@@ -298,7 +298,7 @@ func sendQueryToElasticsearch(packet gopacket.Packet) {
 			req, err = http.NewRequest(
 				"POST",
 				"http://"+eHost+":"+strconv.Itoa(ePort)+"/mqr/query",
-				bytes.NewBuffer([]byte(jsonString)),
+				bytes.NewBuffer(jsonString),
 			)
 		}
 		if err != nil {
