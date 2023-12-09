@@ -319,14 +319,14 @@ func sendQueryToElasticsearch(packet gopacket.Packet) {
 }
 
 func main() {
+	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 1000
+
+	parseOptions()
 	if prof {
 		go func() {
 			log.Println(http.ListenAndServe("localhost:6060", nil))
 		}()
 	}
-	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 1000
-
-	parseOptions()
 	ignoreHosts = strings.Split(ignoreHostStr, ",")
 
 	// redis client
