@@ -23,13 +23,14 @@ import (
 )
 
 var (
-	debug      bool
-	prof       bool
-	cpuRate    int
-	name       string
-	els        bool   = false
-	timeLayout string = "2006-01-02 15:04:05.000000"
-	readOnly   bool   = true
+	pcapBufferSize = 0
+	debug          bool
+	prof           bool
+	cpuRate        int
+	name           string
+	els            bool   = false
+	timeLayout     string = "2006-01-02 15:04:05.000000"
+	readOnly       bool   = true
 
 	device      string
 	snapshotLen int
@@ -65,6 +66,7 @@ type MySQLPacketInfo struct {
 }
 
 func parseOptions() {
+	flag.IntVar(&pcapBufferSize, "pcapBufferSize", 0, "pcapBufferSize")
 	flag.BoolVar(&debug, "debug", false, "debug")
 	flag.BoolVar(&prof, "prof", false, "prof")
 	flag.StringVar(&pcapFile, "f", "", "pcap file. this option invalid packet capture from devices.")
@@ -349,7 +351,9 @@ func main() {
 	} else {
 		// Open device
 		ihandler, _ := pcap.NewInactiveHandle(device)
-		ihandler.SetBufferSize(2147483648)
+		if pcapBufferSize != 0 {
+			ihandler.SetBufferSize(pcapBufferSize)
+		}
 		ihandler.SetSnapLen(snapshotLen)
 		ihandler.SetTimeout(pcap.BlockForever)
 		ihandler.SetPromisc(promiscuous)
