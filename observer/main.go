@@ -262,6 +262,10 @@ func sendQueryToElasticsearch(packet gopacket.Packet) {
 			fmt.Println(jsonString)
 		}
 
+		if eHost == "0.0.0.0" {
+			return
+		}
+
 		var req *http.Request
 
 		if eUser != "" {
@@ -312,7 +316,9 @@ func main() {
 	}
 	if eHost != "" {
 		els = true
-		eClient = &http.Client{}
+		if eHost != "0.0.0.0" {
+			eClient = &http.Client{}
+		}
 	}
 
 	if pcapFile != "" {
@@ -395,7 +401,7 @@ func main() {
 				cnt++
 			}
 		}
-	} else { // Not debug neither elasticsearch. Add redis as fast as possible
+	} else { // Not debug either elasticsearch. Add redis as fast as possible
 		for {
 			packet, err := packetSource.NextPacket()
 			if err == io.EOF {
